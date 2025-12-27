@@ -1,4 +1,4 @@
-# 🍅 Pomodoro Pro: Registro Automático en Notion
+# 🍅 Pomodoro: Registro Automático
 
 Un sistema de productividad automatizado para Windows que gestiona los ciclos de enfoque y registra cada sesión exitosa directamente en la base de datos de **Notion**. 
 
