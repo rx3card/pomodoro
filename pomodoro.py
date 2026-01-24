@@ -2,16 +2,28 @@ import time
 import json
 import requests
 from datetime import datetime, timezone
-from winotify import Notification, audio
 import sys
-import ctypes
-import winsound 
+import platform
+import subprocess
+import os
 
-# Título para control de procesos
-ctypes.windll.kernel32.SetConsoleTitleW("PomodoroService")
+# Detect OS
+IS_WINDOWS = platform.system() == "Windows"
 
-# Configuración de notificación
-NOTIFICATION_DURATION = "short" 
+# Platform specific imports
+if IS_WINDOWS:
+    import ctypes
+    import winsound
+    from winotify import Notification, audio
+    
+    # Título para control de procesos (Windows)
+    try:
+        ctypes.windll.kernel32.SetConsoleTitleW("PomodoroService")
+    except:
+        pass
+else:
+    # Set process title for Linux/Unix
+    sys.stdout.write("\x1b]2;PomodoroService\x07")
 
 # Cargar configuración
 try:
@@ -26,26 +38,53 @@ LONG_BREAK = config['long_break_duration_minutes'] * 60
 CYCLES_BEFORE_LONG = config['cycles_before_long_break']
 
 def play_alarm(type="work"):
-    if type == "work":
-        winsound.Beep(750, 400)
-        winsound.Beep(1000, 500)
+    if IS_WINDOWS:
+        if type == "work":
+            winsound.Beep(750, 400)
+            winsound.Beep(1000, 500)
+        else:
+            winsound.Beep(1000, 300)
+            winsound.Beep(800, 300)
+            winsound.Beep(600, 500)
     else:
-        winsound.Beep(1000, 300)
-        winsound.Beep(800, 300)
-        winsound.Beep(600, 500)
+        # Linux sound logic
+        # Try to use standard system sounds or beep
+        sound_file = "/usr/share/sounds/freedesktop/stereo/complete.oga" # Common success sound
+        if type != "work":
+            sound_file = "/usr/share/sounds/freedesktop/stereo/bell.oga" # Common alert sound
+            
+        try:
+            # Try paplay (PulseAudio) first, then aplay (ALSA)
+            if subprocess.call(["which", "paplay"], stdout=subprocess.DEVNULL) == 0:
+                subprocess.Popen(["paplay", sound_file], stderr=subprocess.DEVNULL)
+            elif subprocess.call(["which", "aplay"], stdout=subprocess.DEVNULL) == 0:
+                subprocess.Popen(["aplay", sound_file], stderr=subprocess.DEVNULL)
+            else:
+                # Fallback to terminal beep
+                print("\a")
+        except:
+            pass
 
 def send_notification(title, message):
-    try:
-        toast = Notification(
-            app_id="Pomodoro", 
-            title=title, 
-            msg=message, 
-            duration=NOTIFICATION_DURATION
-        )
-        toast.set_audio(audio.Default, loop=False)
-        toast.show()
-    except:
-        pass
+    if IS_WINDOWS:
+        try:
+            # On Windows we use winotify
+            toast = Notification(
+                app_id="Pomodoro", 
+                title=title, 
+                msg=message, 
+                duration="short"
+            )
+            toast.set_audio(audio.Default, loop=False)
+            toast.show()
+        except:
+            pass
+    else:
+        # Linux notification using notify-send
+        try:
+            subprocess.Popen(["notify-send", title, message])
+        except:
+            print(f"[{title}] {message}") 
 
 def log_cycle_to_notion(cycle_number, work_min, break_min, break_type, start_time):
     try:

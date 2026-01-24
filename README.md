@@ -4,6 +4,15 @@ Un sistema de productividad automatizado para Windows que gestiona los ciclos de
 
 Diseñado para trabajar en segundo plano, permitiendo concentrarte sin ventanas de consola distrayéndote.
 
+## 🐧 Soporte Linux
+El proyecto ahora es compatible con Linux y Windows. 
+
+- **Sonidos**: Intenta usar sonidos del sistema (pulseaudio/alsa). Si no están disponibles, usará el beep de la terminal.
+- **Notificaciones**: Usa `notify-send` (requiere `libnotify-bin` en algunas distros).
+- **Scripts**: Usa `start.sh` y `stop.sh` en lugar de los `.bat`.
+
+👉 **[Ver Guía Detallada de Instalación en Linux](INSTALL_LINUX.md)**
+
 ## 🚀 Guía de Instalación
 
 Para poner en marcha el proyecto, sigue estos pasos técnicos:
@@ -13,10 +22,11 @@ Abre una terminal en la carpeta del proyecto y ejecuta los siguientes comandos:
 
 ```bash
 # Crear el entorno virtual
-python -m venv venv
+python -m venv venv  # O: python3 -m venv venv
 
 # Activar el entorno
-.\venv\Scripts\activate
+.\venv\Scripts\activate      # Windows
+source venv/bin/activate       # Linux
 
 # Instalar dependencias necesarias
 pip install -r requirements.txt
@@ -58,14 +68,16 @@ Este asistente actualizará automáticamente tu `config.json` con presets o valo
 
 Tienes dos opciones para iniciar el cronómetro:
 
-1. **Doble clic en** `start_pomodoro.bat`: Inicia el programa en **segundo plano** (modo invisible). Recibirás una notificación confirmando el inicio.
-2. **Terminal**: `python pomodoro.py` (Muestra la consola para depuración).
+1. **Windows**: Doble clic en `start_pomodoro.bat`.
+2. **Linux**: Ejecuta `./start.sh` (asegúrate de dar permisos: `chmod +x start.sh`).
+3. **Terminal Debug**: `python pomodoro.py`
 
 ### 🛑 Detención del Sistema
 
 Para cerrar el programa mientras corre en segundo plano, simplemente haz doble clic en:
 
-* `stop_pomodoro.bat`
+* **Windows**: `stop_pomodoro.bat`
+* **Linux**: `./stop.sh`
 
 ---
 
@@ -96,8 +108,8 @@ El sistema utiliza sonidos diferenciados para que no tengas que mirar el reloj:
 
 * `pomodoro.py`: Lógica principal del ciclo y conexión con API.
 * `configurar_tiempos.py`: Herramienta para cambiar duraciones fácilmente.
-* `start_pomodoro.bat`: Lanzador invisible.
-* `stop_pomodoro.bat`: Detenedor de procesos.
+* `start_pomodoro.bat` / `start.sh`: Lanzadores.
+* `stop_pomodoro.bat` / `stop.sh`: Detenedores.
 * `run_silent.vbs`: Script que permite la ejecución oculta de Python.
 
 
@@ -109,7 +121,7 @@ Contiene las librerías externas que Python necesita descargar.
 
 ```text
 requests
-winotify
+winotify; sys_platform == 'win32'
 ```
 
 **_Nota_**: *Debes de crear la base de datos en notion con los mismos valores-tipo que se requieren en el script. Aunque si no optas por no querer guardar tu registro en una db, simplemente omite todo el proceso de notion, el script no tendra problema con realizar las funciones sin la base de datos.*
